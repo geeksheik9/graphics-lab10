@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+
+<link rel="stylesheet" type="text/css" href="./one_square.css" />
+
+<title>Rotating Squares</title>
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+attribute vec4 vPosition;
+attribute vec4 vColor;
+attribute vec3 vNormal;
+
+uniform vec3 theta;
+uniform mat4 perspective;
+uniform mat4 mvm;
+uniform mat3 normalMat;
+
+// varying type variable to share with fragment shader, as the color
+// will be sent to the fragment shader
+varying vec4 fColor;
+varying vec3 fNormal;
+
+void main() {
+	vec3 angles = radians(theta);
+	vec3 c = cos(angles);
+	vec3 s = sin(angles);
+
+	mat4 ry = mat4(
+		c.y, 0.0, -s.y, 0.0,
+		0.0, 1.0, 0.0, 0.0,
+		s.y, 0.0, c.y, 0.0,
+		0.0, 0.0, 0.0, 1.0
+		);
+
+	fNormal = (mvm * vec4(vNormal, 0.0)).xyz;
+	fColor = vColor;
+	gl_Position = perspective * mvm * ry * vPosition;
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+
+precision mediump float;
+
+uniform vec3 ambient;
+// vertex color coming from vertex shader
+varying vec4 fColor;
+varying vec3 fNormal;
+
+void main() {
+
+	vec3 ambient = vec3(0.5,0.5,0.5);
+	vec3 diffuse = vec3(1.0,0.0,0.0);
+	vec3 lightDirection = normalize(vec3(1.0,4.0,0.0));
+
+	vec4 texel = fColor;
+
+	vec3 intensity = ambient + (diffuse * dot(fNormal, lightDirection));
+
+    gl_FragColor = vec4(texel.rgb * intensity, texel.a);
+}
+
+</script>
+
+<script type="text/javascript" src="./include/webgl-utils.js"></script>
+<script type="text/javascript" src="./include/initShaders.js"></script>
+<script type="text/javascript" src="./include/MV.js"></script>
+<script type="text/javascript" src="./one_square.js"></script>
+</head>   
+
+<body>
+<div>
+	<canvas id="gl-canvas" width="512" height="512" >
+		Oops ... your browser doesn't support the HTML5 canvas element
+	</canvas>
+</div>
+<div style="max-width: 512px;">
+	<div>
+		<b>Light Source Position</b>
+		<div class="slider-conatiner">
+			X:<input type="range" min="-100" max="100" value="50" class="slider" id="lightX">&nbsp;
+			Y:<input type="range" min="-100" max="100" value="50" class="slider" id="lightY">&nbsp;
+			Z:<input type="range" min="-100" max="100" value="50" class="slider" id="lightZ">&nbsp;
+		</div>
+	</div>
+	<div>
+		<b>Diffuse Reflectivity Constants</b>
+		<div class="slider-conatiner">
+			Red:<input type="range" min="0" max="100" value="50" class="slider" id="diffRed">&nbsp;
+			Green:<input type="range" min="0" max="100" value="50" class="slider" id="diffGreen">&nbsp;
+			Blue:<input type="range" min="0" max="100" value="50" class="slider" id="diffBlue">&nbsp;
+		</div>
+	</div>
+	<div>
+		<b>Specular Reflectivity Constants</b>
+		<div class="slider-conatiner">
+			Red:<input type="range" min="0" max="100" value="50" class="slider" id="specRed">&nbsp;
+			Green:<input type="range" min="0" max="100" value="50" class="slider" id="specGreen">&nbsp;
+			Blue:<input type="range" min="0" max="100" value="50" class="slider" id="specBlue">&nbsp;
+		</div>
+	</div>
+	<div>
+		<div class="slider-conatiner">
+			<b>Shininess</b>:<input type="range" min="0" max="500" value="100" class="slider" id="diffRed">&nbsp;
+		</div>
+	</div>
+</div>
+</div>
+</body>
+</html>
