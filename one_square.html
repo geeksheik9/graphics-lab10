@@ -8,17 +8,30 @@
 <script id="vertex-shader" type="x-shader/x-vertex">
 attribute vec4 vPosition;
 attribute vec4 vColor;
+
 attribute vec3 vNormal;
 
 uniform vec3 theta;
+uniform vec3 vDiffColor;
+uniform vec3 vSpecColor;
+
 uniform mat4 perspective;
 uniform mat4 mvm;
 uniform mat3 normalMat;
 
+uniform float vShininess;
+
 // varying type variable to share with fragment shader, as the color
 // will be sent to the fragment shader
 varying vec4 fColor;
+varying vec4 fPosition;
+
 varying vec3 fNormal;
+varying vec3 fMvm;
+varying vec3 fDiffColor;
+varying vec3 fSpecColor;
+
+varying float fShininess;
 
 void main() {
 	vec3 angles = radians(theta);
@@ -34,6 +47,10 @@ void main() {
 
 	fNormal = (mvm * vec4(vNormal, 0.0)).xyz;
 	fColor = vColor;
+	fPosition = vPosition;
+	fDiffColor = vDiffColor; 
+	fSpecColor = vSpecColor;
+	fMvm = vec3(0.0, 0.5, 0.5);
 	gl_Position = perspective * mvm * ry * vPosition;
 }
 </script>
@@ -42,22 +59,37 @@ void main() {
 
 precision mediump float;
 
-uniform vec3 ambient;
 // vertex color coming from vertex shader
 varying vec4 fColor;
+varying vec4 fPosition;
+
 varying vec3 fNormal;
+varying vec3 fDiffColor;
+varying vec3 fSpecColor;
+
+varying float fShininess;
+
+uniform vec3 vMvm;
+
 
 void main() {
 
-	vec3 ambient = vec3(0.5,0.5,0.5);
-	vec3 diffuse = vec3(1.0,0.0,0.0);
-	vec3 lightDirection = normalize(vec3(1.0,4.0,0.0));
+	vec3 lightColor = fDiffColor * fSpecColor; 
+	float ambientStrength = 0.75;
+	vec3 ambient = ambientStrength * lightColor;
 
-	vec4 texel = fColor;
+	vec3 normal = normalize(fNormal);
+	vec3 lightDir = normalize(fNormal-fPosition.xyz);
 
-	vec3 intensity = ambient + (diffuse * dot(fNormal, lightDirection));
+	float diff = max(dot(normal,lightDir), 0.0);
+	vec3 diffuse = diff * lightColor;
 
-    gl_FragColor = vec4(texel.rgb * intensity, texel.a);
+	vec3 viewDir = normalize(vMvm - vec3(-1.0,-1.0,-0.5));
+	vec3 reflectDir = reflect(-lightDir, normal);
+	float spec = pow(max(dot(viewDir, reflectDir),0.0), 32.0);
+	vec3 specular = fShininess * spec * lightColor;
+    
+	gl_FragColor = vec4((ambient + diffuse + specular) * fColor.rgb, fColor.a);
 }
 
 </script>
@@ -101,7 +133,7 @@ void main() {
 	</div>
 	<div>
 		<div class="slider-conatiner">
-			<b>Shininess</b>:<input type="range" min="0" max="500" value="100" class="slider" id="diffRed">&nbsp;
+			<b>Shininess</b>:<input type="range" min="0" max="500" value="100" class="slider" id="shininess">&nbsp;
 		</div>
 	</div>
 </div>

@@ -122,31 +122,20 @@ var normals = [
 	var magenta = vec4(1.0,0.0,1.0,1.0);
 	var yellow = vec4(1.0,1.0,0.0,1.0);
 	var cyan = vec4(0.0,1.0,1.0,1.0);
+	var gray = vec4(0.9,0.9,0.9,1.0)
 
-	var vertexColors = [
-		// face 1
-		red,red,red,red,red,red,
-
-		// face 2
-		green,green,green,green,green,green,
-
-		// face 3
-		blue,blue,blue,blue,blue,blue,
-
-		// face 4
-		magenta,magenta,magenta,magenta,magenta,magenta,
-
-		// face 5
-		yellow,yellow,yellow,yellow,yellow,yellow,
-
-		// face 6
-		cyan,cyan,cyan,cyan,cyan,cyan
-		
-		];
+	var vertexColors = [];
 
 var eye = vec3(0,0.5,0.5); //0, 0.5, 0.5	//0,0,1
 var at = vec3(0,0,0); //0,0,0			//0,0,-1
-var up = vec3(0,0.5,0); //0,0.5,0			//0,1,0
+var up = vec3(0,0.5,0); //0,0.5,0	//0,1,0
+
+//var color = vec4(1.0, 0.4, 7.0, 1.0);
+var ambient = vec3(1.0,1.0,1.0);
+var specular = vec3(1.0,1.0,1.0); 
+var light = vec3(1.0, 1.0, -1.0);
+var specIntensity = 0.5;
+var shininess = 50;
 
 window.onload = function init() {
 
@@ -182,7 +171,12 @@ window.onload = function init() {
 
 	colorLoc = gl.getUniformLocation(program, "vertColor");
 	mvmLoc = gl.getUniformLocation(program, 'mvm');
-	perspectiveLoc = gl.getUniformLocation(program, 'perspective')
+	perspectiveLoc = gl.getUniformLocation(program, 'perspective');
+
+	diffColorLoc = gl.getUniformLocation(program, 'vDiffColor');
+	specColorLoc = gl.getUniformLocation(program, 'vSpecColor');
+
+	shininessLoc = gl.getUniformLocation(program, 'vShininess');
 
 	vBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
@@ -198,6 +192,8 @@ window.onload = function init() {
 	gl.vertexAttribPointer(normalLoc, 3, gl.Float, false, 0,0);
 	gl.enableVertexAttribArray(normalLoc);
 
+	addColors(false);
+
 	colorBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
 	gl.bufferData(gl.ARRAY_BUFFER, flatten(vertexColors), gl.STATIC_DRAW)
@@ -212,13 +208,59 @@ window.onload = function init() {
     render();
 };
 
+function addColors(bool){
+	for(let i = 0; i < 6; i++){
+		var color = gray;
+		if(bool){
+			if(i === 0 ){
+				color = red;
+			}
+			if(i === 1){
+				color = green;
+			}
+			if(i === 2){
+				color = blue;
+			}
+			if(i === 3){
+				color = magenta;
+			}
+			if(i === 4){
+				color = yellow;
+			}
+			if(i === 5){
+				color = cyan;
+			}
+		}	
+		for(let j = 0; j < 6; j++){
+			vertexColors.push(color)
+		}
+	}
+}
+
 function render() {
 	// this is render loop
 
 	// clear the display with the background color
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	//theta[yAxis] += 2;
+	diffRed = document.getElementById('diffRed').value;
+	diffGreen = document.getElementById('diffGreen').value;
+	diffBlue = document.getElementById('diffBlue').value;
+
+	theta[yAxis] += 2;
+
+	gl.uniform3fv(diffColorLoc, vec3(diffRed/100, diffGreen/100, diffBlue/100));
+
+	specRed = document.getElementById('specRed').value;
+	specGreen = document.getElementById('specGreen').value;
+	specBlue = document.getElementById('specBlue').value;
+
+	gl.uniform3fv(specColorLoc, vec3(specRed/100, specGreen/100, specBlue/100));
+
+	shininess = document.getElementById('shininess').value;
+	console.log(shininess);
+
+	gl.uniform1f(shininessLoc, shininess);
 	
 	gl.uniformMatrix4fv(mvmLoc, false, flatten(lookAt(eye, at, up)));
 	gl.uniformMatrix4fv(perspectiveLoc, false, flatten(createPerspective(-1,1,-1,1,1,-1)));
