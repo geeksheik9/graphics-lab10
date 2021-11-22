@@ -12,13 +12,11 @@ var program;
 var theta = [0,135,0];
 var yAxis = 1;
 
-var rotating = false;
-
 modelViewMatrix = mat4();
 
 var vertices =[
 	// face 1
-	vec4(-0.5, 0.5, -0.5, 1.0),
+	vec4(-0.5, 0.5, -0.5, 1.0), //z1.0
 	vec4(-0.5, -0.5, 0.5, 1.0),
 	vec4(0.5, -0.5, 0.5, 1.0), 
 	vec4(0.5, -0.5, 0.5, 1.0),
@@ -26,7 +24,7 @@ var vertices =[
 	vec4(-0.5, 0.5, 0.5, 1.0), 
 
 	// face 2
-	vec4(0.5, 0.5, 0.5, 1.0),
+	vec4(0.5, 0.5, 0.5, 1.0), //x1.0
 	vec4(0.5, -0.5, 0.5, 1.0),
 	vec4(0.5, -0.5, -0.5, 1.0),
 	vec4(0.5, -0.5, -0.5, 1.0),
@@ -34,7 +32,7 @@ var vertices =[
 	vec4(0.5, 0.5, 0.5, 1.0),
 
 	// face 3
-	vec4(0.5, -0.5, 0.5, 1.0),
+	vec4(0.5, -0.5, 0.5, 1.0), //y-1.0
 	vec4(-0.5, -0.5, 0.5, 1.0),
 	vec4(-0.5, -0.5, -0.5, 1.0),
 	vec4(-0.5, -0.5, -0.5, 1.0),
@@ -42,7 +40,7 @@ var vertices =[
 	vec4(0.5, -0.5, 0.5, 1.0),
 
 	// face 4
-	vec4(0.5, 0.5, -0.5, 1.0),
+	vec4(0.5, 0.5, -0.5, 1.0), //y1.0
 	vec4(-0.5, 0.5, -0.5, 1.0),
 	vec4(-0.5, 0.5, 0.5, 1.0),
 	vec4(-0.5, 0.5, 0.5, 1.0),
@@ -50,7 +48,7 @@ var vertices =[
 	vec4(0.5, 0.5, -0.5, 1.0),
 
 	// face 5
-	vec4(-0.5, -0.5, -0.5, 1.0),
+	vec4(-0.5, -0.5, -0.5, 1.0), //z-1.0
 	vec4(-0.5, 0.5, -0.5, 1.0),
 	vec4(0.5, 0.5, -0.5, 1.0),
 	vec4(0.5, 0.5, -0.5, 1.0),
@@ -58,7 +56,7 @@ var vertices =[
 	vec4(-0.5, -0.5, -0.5, 1.0),
 
 	// face 6
-	vec4(-0.5, 0.5, -0.5, 1.0),
+	vec4(-0.5, 0.5, -0.5, 1.0), // x-1.0
 	vec4(-0.5, -0.5, -0.5, 1.0),
 	vec4(-0.5, -0.5, 0.5, 1.0),
 	vec4(-0.5, -0.5, 0.5, 1.0),
@@ -135,7 +133,7 @@ var ambient = vec3(1.0,1.0,1.0);
 var specular = vec3(1.0,1.0,1.0); 
 var light = vec3(1.0, 1.0, -1.0);
 var specIntensity = 0.5;
-var shininess = 50;
+var shininess = 0.5;
 
 window.onload = function init() {
 
@@ -178,6 +176,8 @@ window.onload = function init() {
 
 	shininessLoc = gl.getUniformLocation(program, 'vShininess');
 
+	lightPos = gl.getUniformLocation(program, 'vLightPos');
+	
 	vBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
 	gl.bufferData(gl.ARRAY_BUFFER, flatten(vertices), gl.STATIC_DRAW);
@@ -243,6 +243,12 @@ function render() {
 	// clear the display with the background color
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+	lightX = document.getElementById('lightX').value;
+	lightY = document.getElementById('lightY').value;
+	lightZ = document.getElementById('lightZ').value;
+
+	gl.uniform3fv(lightPos, vec3(lightX/100,lightY/100,2*lightZ/100));
+	
 	diffRed = document.getElementById('diffRed').value;
 	diffGreen = document.getElementById('diffGreen').value;
 	diffBlue = document.getElementById('diffBlue').value;
@@ -258,9 +264,8 @@ function render() {
 	gl.uniform3fv(specColorLoc, vec3(specRed/100, specGreen/100, specBlue/100));
 
 	shininess = document.getElementById('shininess').value;
-	console.log(shininess);
 
-	gl.uniform1f(shininessLoc, shininess);
+	gl.uniform1f(shininessLoc, shininess/100);
 	
 	gl.uniformMatrix4fv(mvmLoc, false, flatten(lookAt(eye, at, up)));
 	gl.uniformMatrix4fv(perspectiveLoc, false, flatten(createPerspective(-1,1,-1,1,1,-1)));
